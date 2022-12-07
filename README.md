@@ -1,4 +1,4 @@
-# lambda_conversation_module
+# Lambda Conversation Module
 A addon for Lambda Players that allows Lambda Players to have conversations with other Lambdas and Real Players. One of the returning features from Zeta Players
 
 This conversation system unlike the Zeta's, can support more than Lambdas/Players in a conversation. This means conversations are no longer limited to 1 on 1
