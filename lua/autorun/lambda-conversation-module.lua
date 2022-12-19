@@ -122,7 +122,7 @@ local function Initialize( self, wepent )
 
                     if random( 1, 2 ) == 1 then
                         partner = self.lc_group[ random( #self.lc_group ) ] 
-                        partner.lc_canspeak = true  
+                        if IsValid( partner ) then partner.lc_canspeak = true end
                     else
                         self.lc_canspeak = true
                     end
