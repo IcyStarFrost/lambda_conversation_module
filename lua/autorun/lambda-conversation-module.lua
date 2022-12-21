@@ -98,16 +98,21 @@ local function Initialize( self, wepent )
         
         hook.Run( "LambdaConvoOnSpeak", self )
 
-        if !self.lc_respondent then -- Not answering a question, therefor we must ask one.
+        -- Not answering a question, therefor we must ask one.
+        -- Small chance that we ask a new one.
+        if !self.lc_respondent or random( 100 ) <= 5 then
             self:PlaySoundFile( GetConVar( "lambdaplayers_voice_conquestiondir" ):GetString() == "randomengine" and self:GetRandomSound() or self:GetVoiceLine( "conquestion" ), true )
-            print("CONV DEBUG:", self:GetLambdaName() ,"asked question")
+            
+            self.lc_respondent = true -- We set ourself as a respondent to avoid making us the only inquirer in a one on one convo
             for k, v in ipairs( self.lc_group ) do
                 v.lc_respondent = true -- Asked a question, the rest must answer.
             end
-        else -- We are answering a question
+
+        -- We are answering a question
+        else
             self:PlaySoundFile( GetConVar( "lambdaplayers_voice_conresponddir" ):GetString() == "randomengine" and self:GetRandomSound() or self:GetVoiceLine( "conrespond" ), true )
-            self.lc_respondent = false -- Provided a response to the question.
-            print("CONV DEBUG:", self:GetLambdaName() ,"answered")
+
+            self.lc_respondent = false -- Provided a response to the question. If we go back to us, we will ask a question.
         end
         
         self.lc_canspeak = false
