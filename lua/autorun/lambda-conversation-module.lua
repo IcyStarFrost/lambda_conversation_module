@@ -6,6 +6,7 @@ local table_Empty = table.Empty
 local LerpVector = LerpVector
 local RandomPairs = RandomPairs
 local random = math.random
+local Rand = math.Rand
 local CurTime = CurTime
 
 local function Initialize( self, wepent )
@@ -14,9 +15,8 @@ local function Initialize( self, wepent )
     self.lc_canspeak = false -- If it's our turn to speak in a conversation
     self.lc_maxspeaktimes = 0 -- The maximum times we can talk during a conversation before we stop
     self.lc_currentspeaktimes = 0 -- How many times we've spoken during the conversations
+    self.lc_respondent = false -- Are we supposed to respond to a question?
     self.lc_movementtbl = {}
-
-    
 
     -- Returns if we are in a conversation with this entity
     function self:IsInConvoWith( ent )
@@ -36,13 +36,12 @@ local function Initialize( self, wepent )
 
         local partner = self.lc_group[ random( #self.lc_group ) ]
 
-
         -- Look at the person speaking
         if !self:HookExists( "LambdaConvoOnSpeak", "lookatspeaker" ) then
             self:Hook( "LambdaConvoOnSpeak", "lookatspeaker", function( lambda )
                 if #self.lc_group == 0 then return "end" end
                 if lambda == self or !self:IsInConvoWith( lambda ) then return end
-                self:LookTo( lambda )
+                self:LookTo( lambda, Rand( 0, 1 ) )
             end )
         end
 
@@ -96,9 +95,26 @@ local function Initialize( self, wepent )
         -- Wait until it is our turn to speak or if our group is gone
         while !self.lc_canspeak and #self.lc_group != 0 do coroutine.yield() end
         if self.lc_group == 0 then return end
-
+        
         hook.Run( "LambdaConvoOnSpeak", self )
-        self:PlaySoundFile( GetConVar( "lambdaplayers_voice_idledir" ):GetString() == "randomengine" and self:GetRandomSound() or self:GetVoiceLine( "idle" ), true )
+
+        -- Not answering a question, therefor we must ask one.
+        -- Small chance that we ask a new one.
+        if !self.lc_respondent or random( 100 ) <= 1 then
+            self:PlaySoundFile( GetConVar( "lambdaplayers_voice_conquestiondir" ):GetString() == "randomengine" and self:GetRandomSound() or self:GetVoiceLine( "conquestion" ), true )
+
+            self.lc_respondent = true -- We set ourself as a respondent to avoid making us the only inquirer in a one on one convo
+            for k, v in ipairs( self.lc_group ) do
+                v.lc_respondent = true -- Asked a question, the rest must answer.
+            end
+
+        -- We are answering a question
+        else
+            self:PlaySoundFile( GetConVar( "lambdaplayers_voice_conresponddir" ):GetString() == "randomengine" and self:GetRandomSound() or self:GetVoiceLine( "conrespond" ), true )
+            
+            self.lc_respondent = false -- Provided a response to the question. If we go back to us, we will ask a question.
+        end
+        
         self.lc_canspeak = false
         self.lc_currentspeaktimes = self.lc_currentspeaktimes + 1
 
@@ -136,6 +152,7 @@ local function Initialize( self, wepent )
     -- Leave the conversation we are in
     function self:ExitConversation()
         self.l_nextidlesound = CurTime() + 5
+        self.lc_respondent = false
         self:LookTo()
         self:SetState( "Idle" )
         self:RemoveHook( "LambdaConvoOnSpeak", "lookatspeaker" )
@@ -157,10 +174,6 @@ local function Initialize( self, wepent )
             self.lc_canspeak = true
             self.lc_maxspeaktimes = random( 3, 20 )
             self.lc_currentspeaktimes = 0
-
-
-            
-            
 
             ent.lc_canspeak = false
             ent.lc_maxspeaktimes = random( 3, 20 )
@@ -201,7 +214,7 @@ end
 
 local function OnRemove( self )
     local partner = self.lc_group[ random( #self.lc_group ) ]
-    if IsValid( partner ) and self.lc_canspeak then partner.lc_canspeak = true end
+    if IsValid( partner ) and (self:IsSpeaking() or self.lc_canspeak) then partner.lc_canspeak = true end
     
     for k, v in ipairs( self.lc_group ) do
         if !v.lc_group then continue end
@@ -241,18 +254,21 @@ local function UActions()
 
     AddUActionToLambdaUA( LookConversation )
 
+end
+
+local function RegisterConVoices()
+
+    LambdaRegisterVoiceType( "conquestion", "randomengine", "These are voice lines that play when a Lambda Player asks a question in a conversation." )
+    LambdaRegisterVoiceType( "conrespond", "randomengine", "These are voice lines that play when a Lambda Player answer in a conversation." )
 
 end
 
-
-
 -- I'm lazy lol
 local prefix = "lambdaconversationmodule_"
-
 
 hook.Add( "LambdaOnUAloaded", prefix .. "Uactions", UActions )
 hook.Add( "LambdaOnKilled", prefix .. "onkilled", OnRemove )
 hook.Add( "LambdaOnThink", prefix .. "think", Think )
 hook.Add( "LambdaOnRemove", prefix .. "remove", OnRemove )
 hook.Add( "LambdaOnInitialize", prefix .. "init", Initialize )
-
+hook.Add( "LambdaOnVoiceTypesRegistered", prefix .. "voiceregister", RegisterConVoices )
