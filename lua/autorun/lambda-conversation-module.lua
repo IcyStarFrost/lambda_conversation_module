@@ -214,7 +214,7 @@ end
 
 local function OnRemove( self )
     local partner = self.lc_group[ random( #self.lc_group ) ]
-    if IsValid( partner ) and self.lc_canspeak then partner.lc_canspeak = true end
+    if IsValid( partner ) and (self:IsSpeaking() or self.lc_canspeak) then partner.lc_canspeak = true end
     
     for k, v in ipairs( self.lc_group ) do
         if !v.lc_group then continue end
