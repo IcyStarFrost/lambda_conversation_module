@@ -1,9 +1,7 @@
 local table_insert = table.insert
-local table_remove = table.remove
 local table_RemoveByValue = table.RemoveByValue
 local ipairs = ipairs
 local table_Empty = table.Empty
-local LerpVector = LerpVector
 local RandomPairs = RandomPairs
 local random = math.random
 local Rand = math.Rand
@@ -240,35 +238,26 @@ local function Think( self )
     end
 end
 
-local function UActions()
+local function LookConversation( self )
+    if random( 1, 2 ) != 1 then return end
+    local nearby = self:FindInSphere( nil, 2000, function( ent ) return ent != self and ( ent.IsLambdaPlayer or ent:IsPlayer() and !GetConVar( "ai_ignoreplayers" ):GetBool() ) and self:CanSee( ent ) end )
 
-    local function LookConversation( self )
-        if random( 1, 2 ) != 1 then return end
-        local nearby = self:FindInSphere( nil, 2000, function( ent ) return ent != self and ( ent.IsLambdaPlayer or ent:IsPlayer() and !GetConVar( "ai_ignoreplayers" ):GetBool() ) and self:CanSee( ent ) end )
-
-        for k, ply in RandomPairs( nearby ) do
-            self:StartConversation( ply )
-            break
-        end
+    for k, ply in RandomPairs( nearby ) do
+        self:StartConversation( ply )
+        break
     end
-
-    AddUActionToLambdaUA( LookConversation )
-
 end
 
-local function RegisterConVoices()
+AddUActionToLambdaUA( LookConversation )
 
-    LambdaRegisterVoiceType( "conquestion", "randomengine", "These are voice lines that play when a Lambda Player asks a question in a conversation." )
-    LambdaRegisterVoiceType( "conrespond", "randomengine", "These are voice lines that play when a Lambda Player answer in a conversation." )
+LambdaRegisterVoiceType( "conquestion", "randomengine", "These are voice lines that play when a Lambda Player asks a question in a conversation." )
+LambdaRegisterVoiceType( "conrespond", "randomengine", "These are voice lines that play when a Lambda Player answer in a conversation." )
 
-end
 
 -- I'm lazy lol
 local prefix = "lambdaconversationmodule_"
 
-hook.Add( "LambdaOnUAloaded", prefix .. "Uactions", UActions )
 hook.Add( "LambdaOnKilled", prefix .. "onkilled", OnRemove )
 hook.Add( "LambdaOnThink", prefix .. "think", Think )
 hook.Add( "LambdaOnRemove", prefix .. "remove", OnRemove )
 hook.Add( "LambdaOnInitialize", prefix .. "init", Initialize )
-hook.Add( "LambdaOnVoiceTypesRegistered", prefix .. "voiceregister", RegisterConVoices )
