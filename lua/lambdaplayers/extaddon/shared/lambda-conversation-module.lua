@@ -240,7 +240,8 @@ end
 
 local function LookConversation( self )
     if random( 1, 2 ) != 1 then return end
-    local nearby = self:FindInSphere( nil, 2000, function( ent ) return ent != self and ( ent.IsLambdaPlayer or ent:IsPlayer() and !GetConVar( "ai_ignoreplayers" ):GetBool() ) and self:CanSee( ent ) end )
+    if self:GetState() != "Idle" then return end
+    local nearby = self:FindInSphere( nil, 2000, function( ent ) return ent != self and ( ent.IsLambdaPlayer and ent:GetState() == "Idle" or ent:IsPlayer() and !GetConVar( "ai_ignoreplayers" ):GetBool() ) and self:CanSee( ent ) end )
 
     for k, ply in RandomPairs( nearby ) do
         self:StartConversation( ply )
