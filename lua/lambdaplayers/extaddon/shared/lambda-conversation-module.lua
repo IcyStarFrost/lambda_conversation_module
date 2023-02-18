@@ -99,7 +99,7 @@ local function Initialize( self, wepent )
         -- Not answering a question, therefor we must ask one.
         -- Small chance that we ask a new one.
         if !self.lc_respondent or random( 100 ) <= 1 then
-            self:PlaySoundFile( GetConVar( "lambdaplayers_voice_conquestiondir" ):GetString() == "randomengine" and self:GetRandomSound() or self:GetVoiceLine( "conquestion" ), true )
+            self:PlaySoundFile( self:GetVoiceLine( "conquestion" ), true )
 
             self.lc_respondent = true -- We set ourself as a respondent to avoid making us the only inquirer in a one on one convo
             for k, v in ipairs( self.lc_group ) do
@@ -108,7 +108,7 @@ local function Initialize( self, wepent )
 
         -- We are answering a question
         else
-            self:PlaySoundFile( GetConVar( "lambdaplayers_voice_conresponddir" ):GetString() == "randomengine" and self:GetRandomSound() or self:GetVoiceLine( "conrespond" ), true )
+            self:PlaySoundFile( self:GetVoiceLine( "conrespond" ), true )
             
             self.lc_respondent = false -- Provided a response to the question. If we go back to us, we will ask a question.
         end
